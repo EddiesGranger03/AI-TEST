@@ -51,3 +51,30 @@ test('Crown IDs cannot leak into final-review storage namespace', () => {
   const c = fixture(); c.exams[0].questions[0].id = 'N26E01-A01';
   assert.ok(validateFinals(c, plan).errors.some(e => e.includes('non-namespaced')));
 });
+
+test('Phase 1 completion requires all ten source-checked exams and all fifteen handbook days', () => {
+  const catalog = fixture();
+  assert.ok(validateFinals(catalog, plan, { phase1Complete: true }).errors.some(error => error.includes('ten published')));
+  const prototype = catalog.exams[0];
+  catalog.exams = Array.from({ length: 10 }, (_, index) => {
+    const exam = structuredClone(prototype); exam.id = `final-p1-${String(index + 1).padStart(2, '0')}`;
+    exam.questions.forEach((question, n) => { question.id = `${exam.id}-${n}`; question.intentId = `synthetic-${index}-${n}`; question.prompt = `Synthetic completion fixture ${index} question ${n}`; });
+    return exam;
+  });
+  const section = { title: 'Synthetic only', keywords: ['fixture'], explanation: 'Synthetic', example: 'Synthetic', commonMistake: 'Synthetic', sourceRefs: [{ sourceId: 'test-only', locator: 'Fixture heading' }] };
+  catalog.cheatSheets = Array.from({ length: 15 }, (_, index) => ({ id: `final-fixture-day-${index + 1}`, day: index + 1, phase: 'phase1', status: 'published', title: 'Synthetic sheet', pages: [1, 2].map(n => ({ title: `Fixture ${n}`, sections: [section] })) }));
+  assert.deepEqual(validateFinals(catalog, plan, { phase1Complete: true }).errors, []);
+  assert.ok(validateFinals(catalog, plan, { complete: true }).errors.length > 0);
+  catalog.cheatSheets.pop();
+  assert.ok(validateFinals(catalog, plan, { phase1Complete: true }).errors.some(error => error.includes('day 15')));
+});
+
+test('handbook rejects invalid and duplicate published day numbers', () => {
+  const catalog = fixture();
+  const section = { title: 'Fixture', keywords: ['fixture'], explanation: 'Fixture explanation', example: 'Fixture example', commonMistake: 'Fixture mistake', sourceRefs: [{ sourceId: 'test-only', locator: 'Fixture heading' }] };
+  const sheet = { id: 'day-fixture', day: 1, phase: 'phase1', status: 'published', title: 'Synthetic sheet', pages: [1, 2].map(n => ({ title: `Fixture ${n}`, sections: [section] })) };
+  catalog.cheatSheets = [sheet, { ...sheet, id: 'duplicate' }];
+  assert.ok(validateFinals(catalog, plan).errors.some(error => error.includes('duplicate published handbook day')));
+  catalog.cheatSheets = [{ ...sheet, day: 16 }];
+  assert.ok(validateFinals(catalog, plan).errors.some(error => error.includes('invalid Phase 1 handbook day')));
+});

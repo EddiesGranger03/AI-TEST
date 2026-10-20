@@ -1,117 +1,45 @@
-# Final-review workspace — implementation and content handoff
+# Final-review handoff
 
-## Actual state
+The current scope is **L34 Phase 1, days 01–15 only**. Phase 2 was not reviewed and is not published. The earlier 20-exam plan remains in the schema and completion validator; it is not the scope or delivery claim of this update.
 
-The application shell is implemented. The course content is NOT complete.
+## Content status and sources
 
-- A separate cap-shaped entry opens the final-review space using its own client-side verifier.
-- The existing Crown key, Crown session, legacy questions, Crown questions, cat popups and public README are unchanged.
-- Final content is lazy-loaded after unlocking; progress IDs begin with `final-`.
-- Phase 1 has 10 planned exam slots. Phase 2 has 10 planned slots across four provisional track slots (3/3/2/2). This is 20 exams total, NOT 10 per track.
-- `src/finals/content.json` deliberately has no published questions or course cheat sheets.
-- Unpublished slots have disabled Start buttons. A visible notice states that the source has not been read.
-- The source repository `vinuni-vlearn/AI20k-data` returned 404 in the connector during preparation. This does not prove it is deleted; the remaining work must use an authorized local checkout or authorized GitHub access.
-- Do not claim the 20 exams exist simply because the UI has 20 slots.
+The encrypted catalog contains **10 original practice exams / 850 questions**, plus a **15-day Phase 1 handbook with 185 topics**. Every handbook topic has an explanation, original example, common mistake and pinned source/page or line reference. Each day has three thematic parts and can be selected or searched without Vietnamese accents. Every exam has 60 multiple-choice and 25 open responses: 20 short responses (including a system prompt and a small Python repair), and five scenarios. Each exam is 90 minutes and 100 points. Private-catalog and decrypted-vault validation must pass before repacking. Published catalog status does not establish a GitHub merge or Pages deployment.
 
-## Files and contracts
+Course material comes from `vinuni-vlearn/AI20k-data` at commit `4085fd309e916226311e192c8360a19ec00ff00f`. The handbook authoring inventory contains 69 selected cohort-4/shared teaching files within Phase 1 (40 PDFs and 29 Markdown labs); 28 sources are registered and cited in the catalog. It combines the daily core slides with relevant alternate slide/lab material, including context/loop/harness, ANN, data quality, durable approval and evaluation statistics. Image-only slide variants were visually reviewed; private evidence records file identities, source locators, daily coverage and numerical checks. This is a curriculum handbook, not a claim that every asset or cohort variant in the repository was transcribed.
 
-- `src/finals/plan.json`: provisional format and track-slot allocations.
-- `src/finals/catalog.ts`: TypeScript contracts, planned slot IDs, source-backed track names.
-- `src/finals/content.json`: registry of reviewed sources, track definitions, exams and cheat sheets.
-- `src/finals/FinalGate.tsx`, `access.ts`, `lock.json`: independent access gate.
-- `src/finals/FinalReview.tsx`: phase/track selectors, study cards, cheat-sheet viewer and existing QuizRunner integration.
-- `scripts/validate-finals.mjs`: provenance, count, schema and overlap checks.
-- `scripts/index-final-sources.mjs`: local Git-tree inventory without downloading blobs.
-- `scripts/generate-final-lock.mjs`: optional maintainer-initiated key rotation.
+The authored questions cite days 01–14; the handbook covers days 01–15, including integration, operating costs and the three track previews within Day 15. No Phase 2 contents were read. Answer positions A/B/C/D each occur 15 times per exam. Across all 45 exam pairs, overlap by canonical learning intent is at most 11/25 open responses; at most 10/60 MCQs are reused verbatim. Shared learning goals use different scenarios, inputs or reasoning tasks. The nine added exams underwent cross-author review of answers, distractors, source pages, calculations and Python solutions.
 
-## Password boundary
+Every exam rehearses ROI, supervisor/worker feedback handling, the ReAct loop, chunking and metadata, the missing `effective_date` / 8-versus-4 RAG incident, faithfulness versus context recall, system-prompt role/output/guardrail, code repair, model-change release checks, cosine similarity and retrieval/sampling parameters. At least five short responses use fill-in, matching or process ordering. Topics follow learner recollections within Phase 1; this is not a recovered official paper.
 
-The requested final-review key is already represented by a random-salt PBKDF2-SHA256/AES-GCM verifier in `lock.json`; plaintext is not committed. Marker `AI_TEST_FINAL_REVIEW` and session keys `ai-test:finals:*` are independent from Crown.
+Questions are original practice material grounded in those sources. The 90-minute, 85-question format and reported topics are provisional learner recollections, not an official examination specification. The latest learner feedback includes a small code-diagnosis or function-fix exercise; it may be represented as an open response with a model answer and rubric rather than requiring a code runner.
 
-This is a GitHub Pages client-side gate, not authentication. A technical user can bypass UI state or attempt offline guesses. That limitation is intentional. Do not add a backend, Worker or API key. Do not overwrite the verifier with the CI key. Do not reveal or copy the owner's key into source, tests, documentation, logs or VITE variables.
+Each question and cheat-sheet section must retain source references and a real page, slide or heading locator. Use namespaced `final-p1-*` question and exam IDs so progress stays separate from Crown. Publish authored material only after checking factual correctness, source coverage, answer choices, hints, rubrics and model answers.
 
-Rotation, ONLY when the owner requests it: set `FINAL_REVIEW_PASSWORD` privately in the shell and run `npm run generate:final-lock`. Commit only the resulting verifier. Ordinary builds do not regenerate it or require this variable.
+## Encryption and private authoring
 
-## Provisional exam format
+Read [FINAL_REVIEW_SECURITY.md](FINAL_REVIEW_SECURITY.md) for the password boundary and publishing procedure. `src/finals/lock.json` is the public encrypted vault. No plaintext catalog is imported by the frontend; the private authoring catalog, extracted source material and key file belong outside the public checkout. Never recreate a public `src/finals/content.json` question bank.
 
-Based on the learner's message dated 04/09/2026: 90 minutes, roughly 85 questions of which 25 are open responses; no handwritten code; examples include writing system prompts and explaining a solution to a situation. These are learner-reported assumptions, NOT official school specifications.
+The gate must decrypt the catalog before entering. A stored unlock flag alone cannot unlock it. Decrypted content stays in page memory; refreshing requires the key again, and “Khóa khu ôn” clears the active catalog. The encrypted vault loads only when the gate needs it. Shared-key users can extract decrypted questions, and offline password guessing remains possible.
 
-The current mock format is 60 MCQs + 25 open questions, 90 minutes, 100 points. A practical point allocation is 60 MCQs x 1, 20 concise open responses x 1, 5 longer scenarios x 4. A system prompt is natural-language writing, not a coding exercise. Do not make all 25 open responses lengthy architecture essays.
+The workspace separates exam selection from the searchable knowledge notebook. Each exam retains its own answers, self-grades, position, remaining time, flags and submitted state on the device. Changing mode/timer preserves the run; explicit restart clears it. Leaving pauses the timer. A storage failure keeps the in-memory work visible, warns on the result screen and guards leaving/reloading. Mobile uses a collapsible question map and compact navigation. Result filters include pending self-grades and all questions, including correct MCQs.
 
-A/B/C/D are renderer section identifiers, not a verified final-course syllabus. Set exam.moduleLabels and moduleOverview to honest section names after reviewing the course. Do not copy the entrance-exam math/Python/RAG blueprint blindly. Check the existing QuestionCard header rendering if labels need to be passed through.
+The following paths are placeholders for private files, not repository files:
 
-## Read the large source repository incrementally
-
-Prefer a local checkout supplied by the owner. Do not download a full repository ZIP or all videos, weights, datasets, archives or LFS assets.
-
-For authorized remote access when a checkout is not available:
-
-```bash
-GIT_LFS_SKIP_SMUDGE=1 git clone --filter=blob:none --no-checkout --depth=1 --single-branch --no-tags https://github.com/vinuni-vlearn/AI20k-data.git ../AI20k-data
-# Run from the AI-TEST application repository:
-node scripts/index-final-sources.mjs ../AI20k-data
+```powershell
+node scripts/validate-finals.mjs --catalog "E:\Private\AI-TEST\phase1-catalog.json" --phase1-complete
+npm run generate:final-lock -- "E:\Private\AI-TEST\phase1-catalog.json" "E:\Private\AI-TEST\final-review-key.txt"
+node scripts/validate-finals.mjs --key-file "E:\Private\AI-TEST\final-review-key.txt" --phase1-complete
 ```
 
-The script writes an ignored `.study-cache/source-inventory.json`. Its records are UNREVIEWED. Listing a filename is not reading a source.
+Packing replaces only the public encrypted vault. Ordinary builds must not rotate the final key. Keep an independent private backup of both the authoring catalog and key. Do not put keys or plaintext course content into source, fixtures, documentation, logs, `VITE_*` variables or build artifacts.
 
-1. Read README/syllabus/schedule/index files first. Establish the official names and boundaries of Phase 1 and all four Phase 2 tracks. Do not invent track names.
-2. Pin the exact source commit SHA. Use `git ls-tree -r --name-only HEAD` to list paths without reading bodies.
-3. Read selected text blobs using `git show 'HEAD:<exact-path>'`; use small batches of slides/PDF/PPTX only when needed. Handle LFS pointers explicitly; do not bulk-fetch LFS.
-4. Extract text locally, preserving page/slide/heading labels. Inspect diagrams/tables where extracted text is insufficient; do not assume empty extraction means an empty slide. Do not run blanket OCR or dump thousands of pages into the context.
-5. Store extraction caches outside source control. Commit only authored practice material and source metadata/references, not raw course documents or confidential data.
-6. Build a topic map: phase, track, lesson, keywords, easily confused terms, example skills, suitable question forms, source path and locator, review status.
-7. Work lesson-by-lesson and track-by-track, saving a progress checkpoint after each batch. Do not state that the entire source has been read when only its README has been read.
+## Validation and release evidence
 
-Git reference: https://git-scm.com/docs/git-clone/ . `--filter=blob:none` defers blob contents; `--no-checkout` avoids a full initial checkout.
+Ordinary CI checks the vault envelope plus synthetic schema, encryption, gate and quiz-review tests. Without the private key it cannot certify the actual encrypted content. Validate the actual decrypted vault locally before publishing, then run `npm run validate` and the normal build with the repository's existing Crown build configuration.
 
-## Content data model
+`validate:finals:phase1` requires private input via `-- --catalog <file>` or `-- --key-file <file>` and checks all ten Phase 1 IDs plus all fifteen published handbook days. Daily sheet numbers must be unique integers from 1 to 15. Private checks additionally verify examples, common mistakes, source/page bounds, numerical examples, and byte-equivalent preservation of the ten exam objects. `validate:finals:complete` still requires the earlier 20-exam plan, four confirmed Phase 2 tracks and their cheat sheets. It intentionally fails for this Phase 1-only delivery. Do not weaken that contract or report all 20 exams complete.
 
-`content.json` has four arrays:
+Before release, verify all ten Phase 1 exams and fifteen handbook days, day-filter/search interaction, correct and incorrect keys, forged session-flag rejection, Crown isolation, saved progress, 85-question navigation, timer stop after submission, answer review, self-grading, hint and model-answer buttons, mobile layout and absence of private plaintext or keys from the repository and bundle. Include handbook explanations/examples/common mistakes in the plaintext scan. Local checks do not prove a GitHub merge or Pages deployment; verify those separately before claiming publication.
 
-1. `sources`: `{id, repo, path, revision, phase, trackId?, reviewed}`. `revision` is a 40-character source commit SHA. Mark reviewed=true only after reading the actual material.
-2. `trackDefinitions`: `{id, title, sourceRefs}`. IDs are track-1 through track-4; titles must be confirmed by the course sources. Phase 2 source records must match the track.
-3. `exams`: existing Exam fields plus `{phase, trackId?, status}` and `questions`.
-4. `cheatSheets`: `{id, phase, trackId?, status, title, pages}`.
-
-Every question must include `intentId` and `sourceRefs: [{sourceId, locator}]`. A locator is an actual slide/page/heading/line range, not a made-up citation. For Phase 2, references may include shared Phase 1 fundamentals but must not silently import another track's syllabus.
-
-MCQs: `type:'mcq'`, four A/B/C/D options, one answer, useful explanation. Open questions: `type:'essay'`, `responseKind:'short-answer'|'system-prompt'|'scenario'`, at least three separate hints, at least three rubric criteria, modelAnswer in accessible Vietnamese with a concrete 'Ví dụ'. No `code` question type.
-
-Exam IDs must use planned IDs: `final-p1-01` through `final-p1-10`; Phase 2 uses `final-p2-t1-01`, etc. Each question ID starts with its exam ID plus a hyphen. The session/progress namespace must never overlap Crown.
-
-Cheat sheets: 2–3 pages per sheet. Each page has `{title, sections}`; each section has `{title, keywords[], explanation, example, commonMistake, sourceRefs[]}`. Publish at least one Phase 1 sheet and one for each of the four tracks; add more short sheets when needed rather than compressing an entire curriculum into unreadable text.
-
-## Authoring order and quality
-
-1. Confirm track titles and coverage map from actual source material.
-2. Author one Phase 1 exam plus its cheat sheet; review the source coverage and nontechnical clarity.
-3. Finish Phase 1 exams 02–10, varying scenarios, questions and reasoning while staying within the same course.
-4. Author one Phase 2 exam per confirmed track; review before filling the remaining allocated slots.
-5. Build track-specific cheat sheets from the final question coverage, not generic AI summaries.
-6. Do not import the owner's unrelated personal project topics. Do not increase difficulty merely to force different exams.
-7. No repeated open prompt verbatim. For any pair of exams, at most 12/25 open questions may share the same intent (48%). Do not create new intent IDs to disguise equivalent prompts/rubrics. Audit semantic overlap manually as well.
-8. Within the same phase/track, at most 15/60 MCQ prompts may be identical. Shuffle answer positions, avoid obvious nonsense distractors and verify one correct answer.
-9. Include the common keywords and distinctions in the slides. Broad coverage matters more than advanced, obscure terminology.
-10. Change draft to published only after references, answers, hints, examples and rubrics are reviewed. Unfinished exams must remain hidden from Start.
-
-## Commands and completion criteria
-
-For the existing Crown build dependency, use a TEST-ONLY local key, never reset the deployed Crown secret:
-
-```bash
-npm ci
-export CROWN_PASSWORD=ci-test-password-only
-npm run generate:crown-lock
-npm run validate
-npm run build
-# Must fail while content is incomplete:
-npm run validate:finals:complete
-```
-
-`validate:finals` intentionally permits an empty scaffold. `validate:finals:complete` requires 20 published exams, four source-confirmed tracks and published sheets for Phase 1 and each track. Do not remove/weaken this distinction to claim completion.
-
-Before final handoff: test correct/incorrect final key, Crown/final session isolation, phase and track filters, disabled draft exams, actual published exam start, hint/sample-answer opt-in, Exam mode hiding answers, saved progress per final ID, 85-question navigation, self-grading, mobile sheets and old Crown/legacy flows.
-
-Check that question review after submitting in Exam mode actually reveals the answers and allows self-grading: the existing QuizRunner review behavior may need a small backward-compatible fix. Do not regress Crown's independent hint and answer buttons. Tests must include this path when published content is added.
-
-Create a focused content branch, commit in batches, open a PR, wait for CI, squash-merge if authorized, and verify the deployed Pages commit. Report the real source coverage, exam counts, sheet counts, remaining gaps and actual merge/deploy status. Never claim a merge or production release based only on a local build.
+This update does not change the public README or the Crown password and deployment configuration. Legacy and Crown question banks remain outside the encrypted final-review catalog.
